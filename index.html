@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Rocha’s English Class: Imagery</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Arial', 'Helvetica', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#00bfff',
+                        darkbg: '#121212',
+                        darkpanel: '#1e1e1e',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Shiny blue border requirement */
+        .shiny-input {
+            box-shadow: 0 0 10px #00bfff, inset 0 0 5px #00bfff;
+            border: 2px solid #00bfff;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            outline: none;
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .shiny-input:focus {
+            box-shadow: 0 0 15px #00bfff, inset 0 0 8px #00bfff;
+        }
+
+        .dark body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .dark .card {
+            background-color: #1e1e1e;
+            border-color: #333;
+        }
+        .dark .shiny-input {
+            color: #fff;
+        }
+        .dark .shiny-input option {
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+
+        /* Puzzle Grid Styles */
+        #puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 5 / 4;
+            margin: 0 auto;
+            background: #ccc;
+            border: 2px solid #444;
+        }
+        .puzzle-piece {
+            background-image: url('Image2.jpg');
+            background-size: 500% 400%;
+            cursor: grab;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .puzzle-piece:active {
+            cursor: grabbing;
+        }
+
+        /* Sortable styles */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #00bfff;
+        }
+        .word-pill {
+            cursor: grab;
+            user-select: none;
+        }
+        .word-pill:active {
+            cursor: grabbing;
+        }
+
+        /* Utilities */
+        .correct-ans { background-color: rgba(34, 197, 94, 0.2) !important; border-color: #22c55e !important; box-shadow: none !important; }
+        .incorrect-ans { background-color: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; box-shadow: none !important; }
+        .disabled-element { opacity: 0.6; pointer-events: none; }
+        
+        /* Print media query */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .no-print { display: none !important; }
+            .card { box-shadow: none !important; border: none !important; }
+            canvas { max-width: 100% !important; height: auto !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="fixed top-0 left-0 w-full z-50 bg-white dark:bg-darkpanel shadow-md no-print transition-colors duration-300">
+        <div id="progress-container" class="w-full h-2 bg-gray-200 dark:bg-gray-700">
+            <div id="progress-bar" class="h-2 bg-primary transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-primary truncate mr-4">Mr. Rocha’s English Class</h1>
+            <div class="flex items-center space-x-3">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition" aria-label="Toggle Dark Mode">
+                    <svg id="moon-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg id="sun-icon" class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+                <button onclick="submitAll()" class="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">Submit</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 pt-24 pb-12 w-full max-w-4xl">
+        
+        <section id="section-0" class="activity-section card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold mb-6 text-center text-primary">Introduction</h2>
+            <div class="mb-6 flex flex-col md:flex-row gap-6 justify-center items-center">
+                <div class="w-full md:w-1/2 flex flex-col gap-2">
+                    <label class="font-bold">Student Name:</label>
+                    <input type="text" id="studentName" class="shiny-input w-full" placeholder="Type your name here...">
+                </div>
+                <div class="w-full md:w-1/2 flex flex-col gap-2">
+                    <label class="font-bold">Date:</label>
+                    <input type="date" id="studentDate" class="shiny-input w-full">
+                </div>
+            </div>
+            <div class="w-full flex justify-center mb-6">
+                <!-- Image1 Placeholder -->
+                <div class="relative w-full max-w-lg overflow-hidden rounded-lg shadow border border-gray-300 dark:border-gray-600">
+                    <img src="Image1.jpg" alt="Image 1" onerror="this.src='https://placehold.co/600x400/1e1e1e/00bfff?text=Image1+Placeholder'" class="w-full h-auto object-cover">
+                </div>
+            </div>
+            <div class="flex justify-end mt-8 no-print">
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-6 rounded hover:bg-gray-700 transition">Next Activity &rarr;</button>
+            </div>
+        </section>
+
+        <section id="section-1" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 1: Video Analysis</h2>
+            <p class="mb-4">Watch the video. Take notes and tell Mr. Rocha what the video was about.</p>
+            <div class="w-full mb-6 flex justify-center">
+                <video src="Video1.mp4" controls class="max-w-full rounded shadow" onerror="this.outerHTML='<div class=\'w-full h-64 bg-gray-300 dark:bg-gray-800 flex items-center justify-center rounded\'>Video1 Placeholder (Audio/Video Error)</div>'"></video>
+            </div>
+            <textarea id="act1-notes" class="shiny-input w-full h-32 mb-4" placeholder="Type your notes here..."></textarea>
+            
+            <div class="flex items-center gap-4 mb-6">
+                <label class="font-bold">Self-grade your effort (1-10):</label>
+                <select id="act1-grade" class="shiny-input w-24">
+                    <option value="">--</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct1()" id="btn-check-act1" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act1" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-2" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 2: Scrambled Image</h2>
+            <p class="mb-4">Order the parts of the image to form the complete image. Drag and drop the pieces.</p>
+            
+            <div class="flex flex-col md:flex-row gap-6 items-start justify-center">
+                <div class="w-full md:w-1/3 flex flex-col items-center">
+                    <h3 class="font-bold mb-2">Target Image</h3>
+                    <img src="Image2.jpg" alt="Target" class="w-[90%] max-w-[400px] border border-gray-400 shadow rounded" onerror="this.src='https://placehold.co/400x320/1e1e1e/00bfff?text=Image2'">
+                    <div class="mt-4 text-xl font-mono bg-gray-200 dark:bg-gray-800 p-2 rounded shadow">
+                        Timer: <span id="puzzle-timer">00:00</span>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-2/3">
+                    <div id="puzzle-grid" class="shadow-lg rounded"></div>
+                    <div class="mt-4 flex justify-center no-print">
+                        <button onclick="initPuzzle()" id="btn-do-again" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded shadow transition">Do Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-8 no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct2()" id="btn-check-act2" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act2" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-3" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 3: Conversation on Imagery</h2>
+            <p class="mb-4">Select the correct response for Person B to complete the 18-line conversation. Choices disappear once selected!</p>
+            
+            <div id="conversation-container" class="space-y-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct3()" id="btn-check-act3" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act3" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-4" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 4: Story Interpretation</h2>
+            <p class="mb-4">Analyze the image below and tell Mr. Rocha what the story is about.</p>
+            
+            <div class="w-full mb-6 flex justify-center">
+                <img src="Image3.jpg" alt="Image 3" class="max-w-full rounded shadow" onerror="this.src='https://placehold.co/600x300/1e1e1e/00bfff?text=Image3'">
+            </div>
+            
+            <textarea id="act4-notes" class="shiny-input w-full h-32 mb-4" placeholder="Type your interpretation here..."></textarea>
+            
+            <div class="flex items-center gap-4 mb-6">
+                <label class="font-bold">Self-grade your effort (1-10):</label>
+                <select id="act4-grade" class="shiny-input w-24">
+                    <option value="">--</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct4()" id="btn-check-act4" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act4" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-5" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 5: Reading Comprehension</h2>
+            <p class="mb-4">Read the text about imagery in literature and answer the multiple-choice questions.</p>
+            
+            <div class="bg-blue-50 dark:bg-gray-800 p-6 rounded-lg mb-6 shadow-inner text-justify leading-relaxed">
+                <h3 class="font-bold text-xl mb-3 text-center">The Architecture of Perception</h3>
+                <p class="mb-2">In the realm of advanced literary analysis, imagery transcends mere decoration; it is the fundamental architecture of narrative perception. Masterful authors employ sensory details not simply to paint a static picture, but to orchestrate a dynamic psychological experience for the reader. When we engage with a text saturated in evocative imagery, we are unconsciously adopting the cognitive framework of the protagonist, experiencing their environment with a visceral immediacy that exposition alone cannot achieve.</p>
+                <p class="mb-2">Consider the strategic deployment of olfactory imagery. Scent bypasses the analytical centers of the brain, linking directly to memory and emotion. A writer describing the "acrid tang of rusted iron and stagnant rain" immediately establishes a mood of decay and entrapment, implicitly foreshadowing a narrative trajectory of decline. Similarly, auditory imagery—the rhythmic cadence of a grandfather clock or the distant, discordant wail of a siren—can manipulate the pacing of a scene, creating suspense or emphasizing isolation without a single explicit statement of fear.</p>
+                <p class="mb-2">Furthermore, tactile imagery grounds abstract themes in tangible reality. When a character grasps a "splintered, unforgiving banister," the physical sensation mirrors a psychological struggle. The texture of the world becomes a reflection of internal states. Visual imagery, while perhaps the most ubiquitous, operates most effectively when juxtaposed. The stark contrast between "blistering, sterile luminescence" and "comforting, impenetrable obsidian shadows" forces the reader to navigate a thematic chiaroscuro, highlighting moral ambiguities or character duality.</p>
+                <p>Ultimately, imagery at the C1 level demands active synthesis. It requires the reader to decode the sensory lexicon, translating physical descriptions into thematic resonance. The truly profound literary work does not tell us what a character feels; it forces us to inhabit their sensory landscape, ensuring that the emotional resonance of the narrative lingers long after the final page is turned.</p>
+            </div>
+
+            <div id="mcq-container-act5" class="space-y-6 mb-6">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct5()" id="btn-check-act5" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act5" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-6" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 6: Sentence Structure</h2>
+            <p class="mb-4">Drag and drop the words to form 12 complex and compound sentences about imagery (C2 level). Click the speaker icon to hear the correct sentence aloud.</p>
+            
+            <div id="sentences-container" class="space-y-8 mb-6">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct6()" id="btn-check-act6" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="nextSection()" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-bold py-2 px-4 rounded hover:bg-gray-700 transition">Next &rarr;</button>
+            </div>
+            <div id="feedback-act6" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-7" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Activity 7: Listen, Complete & Analyze</h2>
+            <p class="mb-4">Listen to the audio, complete the text with the missing words (every 20th word is missing), and answer the questions.</p>
+            
+            <div class="flex flex-col md:flex-row gap-6 mb-6 items-center">
+                <audio src="Audio1.mp3" controls class="w-full md:w-1/2" onerror="this.outerHTML='<div class=\'w-full md:w-1/2 p-4 bg-gray-200 text-center rounded\'>Audio1 Placeholder</div>'"></audio>
+                <img src="Image4.jpg" alt="Image 4" class="w-full md:w-1/2 rounded shadow object-cover" onerror="this.src='https://placehold.co/400x200/1e1e1e/00bfff?text=Image4'">
+            </div>
+
+            <div class="bg-yellow-50 dark:bg-gray-800 p-6 rounded-lg mb-8 shadow-inner leading-loose text-lg" id="cloze-container">
+                <h3 class="font-bold text-2xl mb-4 text-center">Where Granite Keeps the Dawn</h3>
+                <div id="cloze-text-content" class="text-justify">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <h3 class="font-bold text-xl mb-4">Multiple-Choice Questions</h3>
+            <div id="mcq-container-act7" class="space-y-6 mb-6">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-between items-center no-print">
+                <button onclick="prevSection()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-gray-400 transition">&larr; Back</button>
+                <button onclick="checkAct7()" id="btn-check-act7" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow transition">Check Answers</button>
+                <button onclick="showResults()" class="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-6 rounded shadow transition">Finish & View Results &rarr;</button>
+            </div>
+            <div id="feedback-act7" class="mt-4 text-center font-bold"></div>
+        </section>
+
+        <section id="section-8" class="activity-section hidden card bg-white dark:bg-darkpanel p-6 rounded-xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold mb-6 text-center text-primary">Performance Results</h2>
+            
+            <div class="text-center mb-8">
+                <p class="text-xl">Student: <span id="res-name" class="font-bold border-b-2 border-primary pb-1"></span></p>
+                <p class="text-lg mt-2">Date: <span id="res-date" class="font-bold border-b-2 border-primary pb-1"></span></p>
+                <p class="text-4xl font-bold mt-6 text-primary" id="res-overall">0%</p>
+                <p class="text-gray-500 dark:text-gray-400">Overall Score</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <canvas id="barChart"></canvas>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow flex justify-center items-center">
+                    <canvas id="pieChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold mb-4 border-b pb-2">Activity Breakdown</h3>
+            <ul id="score-breakdown" class="list-disc pl-6 space-y-2 mb-8 text-lg">
+                <!-- Injected via JS -->
+            </ul>
+
+            <h3 class="text-2xl font-bold mb-4 border-b pb-2">Personalized Recommendations</h3>
+            <ul id="recommendations-list" class="space-y-3 mb-8">
+                <!-- Injected via JS -->
+            </ul>
+
+            <div class="flex justify-center mt-8 space-x-4 no-print">
+                <button onclick="window.scrollTo(0,0); window.print();" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded shadow transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print Results
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // State Management
+        let currentSection = 0;
+        const totalSections = 8; // 0 to 8 (9 total)
+        let puzzleTimerInterval;
+        let puzzleSeconds = 0;
+        
+        let scores = {
+            act1: { earned: 0, max: 10, completed: false },
+            act2: { earned: 0, max: 20, completed: false },
+            act3: { earned: 0, max: 9, completed: false },
+            act4: { earned: 0, max: 10, completed: false },
+            act5: { earned: 0, max: 6, completed: false },
+            act6: { earned: 0, max: 12, completed: false },
+            act7: { earned: 0, max: 24, completed: false } // cloze + 6 mcq
+        };
+
+        // Data: Activity 3 Conversation
+        const act3Data = [
+            { a: "Have you noticed how sensory details elevate the narrative in this novel?", b: "Absolutely; the author's use of olfactory imagery immediately establishes the melancholic mood." },
+            { a: "Exactly! That description of 'decaying autumn leaves' permeates the opening chapter.", b: "It acts as a motif, foreshadowing the protagonist's inevitable decline." },
+            { a: "I also found the auditory imagery during the climax quite overwhelming.", b: "The cacophony of the storm perfectly mirrored her internal psychological turmoil." },
+            { a: "Do you think the visual descriptions were somewhat overshadowed by these other senses?", b: "Perhaps slightly, though the recurrent juxtaposition of light and shadow was quite effective." },
+            { a: "True, the stark chiaroscuro effect in the final scene is unforgettable.", b: "Indeed, it brilliantly encapsulates the moral ambiguity of the entire plot." },
+            { a: "It's fascinating how a few well-chosen adjectives can completely manipulate our perception.", b: "That's the essence of masterful prose; it evokes experience rather than merely stating it." },
+            { a: "I plan to analyze this specific technique for my final term paper.", b: "A stellar choice. There's an abundance of textual evidence you can draw upon." },
+            { a: "I just hope I can articulate the nuances of the synesthesia utilized in part three.", b: "Just break it down analytically; examine how the crossing of senses heightens the disorientation." },
+            { a: "Thanks for the insight, it's definitely given me a clearer critical framework.", b: "Anytime! I look forward to reading your comprehensive analysis." }
+        ];
+
+        // Data: Activity 5 Reading MCQs
+        const act5Questions = [
+            { q: "What is the primary function of imagery according to the text?", ans: "It orchestrates a dynamic psychological experience for the reader.", options: ["It provides static decorative elements to the narrative.", "It orchestrates a dynamic psychological experience for the reader.", "It replaces the need for exposition and dialogue.", "It focuses entirely on visual descriptions."] },
+            { q: "How does olfactory imagery affect the reader?", ans: "It bypasses analytical thought and links to memory and emotion.", options: ["It forces the reader to analyze the plot logically.", "It solely establishes the time period of the novel.", "It bypasses analytical thought and links to memory and emotion.", "It creates an auditory illusion in the reader's mind."] },
+            { q: "What does the phrase 'acrid tang of rusted iron' foreshadow?", ans: "A narrative trajectory of decline.", options: ["A sudden romantic development.", "A narrative trajectory of decline.", "A triumph over nature.", "A comedic misunderstanding."] },
+            { q: "How can auditory imagery manipulate a scene?", ans: "By creating suspense without explicit statements of fear.", options: ["By making the characters seem physically closer.", "By creating suspense without explicit statements of fear.", "By providing a visual representation of sound.", "By replacing the protagonist's internal monologue."] },
+            { q: "What does tactile imagery achieve in literature?", ans: "It grounds abstract themes in tangible reality.", options: ["It confuses the reader regarding the setting.", "It grounds abstract themes in tangible reality.", "It eliminates the need for visual descriptions.", "It distances the reader from the protagonist's emotions."] },
+            { q: "What is required of a reader at the C1 level when encountering imagery?", ans: "Active synthesis to decode the sensory lexicon.", options: ["Passive acceptance of physical descriptions.", "Active synthesis to decode the sensory lexicon.", "Memorization of specific adjectives.", "Ignoring sensory details to focus on dialogue."] }
+        ];
+
+        // Data: Activity 6 Sentences (C2)
+        const act6Sentences = [
+            "The juxtaposition of vivid sensory details meticulously underscores the protagonist's existential dread.",
+            "While auditory imagery dominates the climax, underlying visual metaphors provide a subtle counterpoint.",
+            "Evoking a palpable sense of nostalgia, olfactory descriptions seamlessly transport the reader backward.",
+            "The author orchestrates a symphony of tactile sensations that render the setting remarkably immersive.",
+            "By inextricably linking weather phenomena to internal psychological turmoil, pathetic fallacy achieves resonance.",
+            "Striking chiaroscuro effects within the narrative visually manifest the inherent moral ambiguities presented.",
+            "The recurrent motif of decaying organic matter continuously reinforces an atmosphere of inevitable decline.",
+            "Synesthetic descriptions, where sounds evoke vibrant colors, profoundly disorient yet captivate the audience.",
+            "Rather than explicitly stating emotion, masterful prose evokes complex internal states through precise observation.",
+            "The meticulous accumulation of seemingly trivial sensory fragments culminates in a devastating emotional epiphany.",
+            "Austere, minimalist descriptions contrast sharply with the overwhelmingly complex psychological landscape depicted within.",
+            "Through incisive metaphorical language, abstract philosophical concepts are rendered startlingly concrete and accessible."
+        ];
+
+        // Data: Activity 7 Text & MCQs
+        const act7TextRaw = `Before sunrise, William left the valley floor while Yosemite still seemed submerged in sleep. The air carried the resinous breath of pine, sharpened by the mineral chill descending from the granite walls. Above him, Half Dome hovered like an unfinished thought, its pale face scarcely distinguishable from the paling sky. He tightened his pack and followed the trail, each footfall muffled by russet needles and last season’s leaves.
+As the path climbed, the forest disclosed itself in fragments: a spiderweb jewelled with dew; the cinnabar flash of a woodpecker; a creek slipping over stones with the furtive eloquence of whispered news. William had expected grandeur, something immediate and theatrical. Instead, the wilderness worked upon him by accumulation. Its smallest details entered his attention until the clamour he had brought from the city—appointments, alarms, unfinished conversations—receded into irrelevance.
+Near Nevada Fall, the world became tumultuous. Water hurled itself into the abyss, shattering sunlight into prismatic mist. The roar was not merely heard; it travelled through the ribs, an elemental percussion that made speech seem both impossible and unnecessary. William paused beside a wind-bent cedar. Far below, the river stitched a silver seam through the valley, while cliffs rose on either side with the austere magnificence of cathedral walls.
+By noon, heat lay upon the exposed rock like transparent metal. His calves burned; a blister announced itself with every step. For a moment, the summit seemed less a destination than an accusation. Yet when he considered turning back, a raven passed overhead, its wings making two deliberate strokes before it surrendered to an updraft. The bird’s effortless ascent rebuked his impatience. Progress here was not conquest, he realised, but consent: a willingness to move according to the mountain’s scale rather than his own.
+He reached the overlook in the late afternoon. Clouds had gathered above the Sierra, violet at their undersides and incandescent along their rims. The valley opened beneath him, immense yet intricately ordered: dark forests, luminous meadows, and the white filament of falling water. Nothing in the view asked to be possessed. Its beauty derived precisely from its indifference, from having existed before his arrival and promising to continue after his departure.
+When thunder murmured beyond the peaks, William began his descent. Rain soon stippled the dust and darkened the granite to pewter. The familiar trail appeared transfigured: bark gleamed, ferns unfurled their green intensity, and petrichor rose richly from the earth. He walked carefully, no longer measuring the journey by distance. Twilight pooled among the trees, and the first stars emerged above the valley. By the time he reached camp, fatigue had hollowed him out, but into that emptiness the mountain had poured a lucid, enduring silence.`;
+
+        const act7Questions = [
+            { q: "1. What does William initially expect from Yosemite?", ans: "C. Immediate, theatrical grandeur", options: ["A. Evidence of historical settlement", "B. Solitude without physical difficulty", "C. Immediate, theatrical grandeur", "D. A carefully managed tourist experience"] },
+            { q: "2. What does the phrase “the wilderness worked upon him by accumulation” suggest?", ans: "D. Small observations progressively transform his awareness", options: ["A. His physical exhaustion steadily worsens", "B. The forest conceals its most impressive features", "C. The landscape gradually overwhelms him with danger", "D. Small observations progressively transform his awareness"] },
+            { q: "3. Why is the roar of Nevada Fall described as “elemental percussion”?", ans: "A. It is physically powerful and primal", options: ["A. It is physically powerful and primal", "B. It warns hikers that a storm is approaching", "C. It resembles a rehearsed musical performance", "D. It produces a faint rhythm beneath the silence"] },
+            { q: "4. What realization follows William’s observation of the raven?", ans: "B. Progress requires adapting to a scale beyond his own", options: ["A. Nature rewards those who move quickly", "B. Progress requires adapting to a scale beyond his own", "C. The summit can be reached without effort", "D. The mountain must be defeated through endurance"] },
+            { q: "5. According to the passage, why is the valley’s beauty especially profound?", ans: "A. It remains independent of human possession", options: ["A. It remains independent of human possession", "B. It can be fully understood from the overlook", "C. It seems designed for William alone", "D. It recalls the architecture of his city"] },
+            { q: "6. Which statement best describes William at the end of the hike?", ans: "D. He is physically depleted but inwardly clarified", options: ["A. He regrets having underestimated the distance", "B. He is disappointed by the storm", "C. He is eager to document every detail", "D. He is physically depleted but inwardly clarified"] }
+        ];
+
+        let clozeAnswers = []; // Store answers for checking
+
+        function updateProgress() {
+            const pct = (currentSection / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = pct + '%';
+        }
+
+        function showSection(index) {
+            document.querySelectorAll('.activity-section').forEach((sec, i) => {
+                if(i === index) {
+                    sec.classList.remove('hidden');
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+            window.scrollTo(0, 0);
+            updateProgress();
+
+            // Handle timer for Act 2
+            if(index === 2 && !scores.act2.completed) {
+                startPuzzleTimer();
+            } else {
+                clearInterval(puzzleTimerInterval);
+            }
+        }
+
+        function nextSection() {
+            if(currentSection < totalSections) {
+                currentSection++;
+                showSection(currentSection);
+            }
+        }
+
+        function prevSection() {
+            if(currentSection > 0) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        }
+
+        function submitAll() {
+            currentSection = 8;
+            showSection(currentSection);
+            generateResults();
+        }
+
+        // Shuffle utility
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Dark Mode Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        function initPuzzle() {
+            const grid = document.getElementById('puzzle-grid');
+            grid.innerHTML = '';
+            let pieces = [];
+            
+            // 5 cols, 4 rows = 20 pieces
+            for(let i=0; i<20; i++) {
+                let div = document.createElement('div');
+                div.className = 'puzzle-piece rounded-sm';
+                div.dataset.originalIndex = i;
+                
+                let col = i % 5;
+                let row = Math.floor(i / 5);
+                div.style.backgroundPosition = `${(col / 4) * 100}% ${(row / 3) * 100}%`;
+                pieces.push(div);
+            }
+            
+            shuffle(pieces);
+            pieces.forEach(p => grid.appendChild(p));
+            
+            Sortable.create(grid, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                disabled: scores.act2.completed
+            });
+
+            puzzleSeconds = 0;
+            document.getElementById('puzzle-timer').innerText = "00:00";
+            if(currentSection === 2 && !scores.act2.completed) startPuzzleTimer();
+        }
+
+        function startPuzzleTimer() {
+            clearInterval(puzzleTimerInterval);
+            puzzleTimerInterval = setInterval(() => {
+                puzzleSeconds++;
+                let m = Math.floor(puzzleSeconds / 60).toString().padStart(2, '0');
+                let s = (puzzleSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('puzzle-timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function renderAct3() {
+            const container = document.getElementById('conversation-container');
+            container.innerHTML = '';
+            
+            let bOptions = act3Data.map(d => d.b);
+            // We don't shuffle the options array yet, we populate each select with all options.
+            // Shuffling happens within each select.
+            
+            act3Data.forEach((turn, idx) => {
+                let div = document.createElement('div');
+                div.className = "p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm";
+                
+                let pA = document.createElement('p');
+                pA.className = "mb-2 font-bold text-blue-700 dark:text-blue-300";
+                pA.innerText = `Person A: "${turn.a}"`;
+                
+                let pB = document.createElement('div');
+                pB.className = "flex items-start flex-col sm:flex-row sm:items-center gap-2";
+                let labelB = document.createElement('span');
+                labelB.className = "font-bold text-green-700 dark:text-green-400 whitespace-nowrap";
+                labelB.innerText = "Person B: ";
+                
+                let select = document.createElement('select');
+                select.className = "shiny-input w-full act3-dropdown flex-grow text-sm";
+                select.dataset.correct = turn.b;
+                select.innerHTML = `<option value="">-- Select Response --</option>`;
+                
+                let shuffledOptions = shuffle([...bOptions]);
+                shuffledOptions.forEach(opt => {
+                    let optionEl = document.createElement('option');
+                    optionEl.value = opt;
+                    optionEl.innerText = opt;
+                    select.appendChild(optionEl);
+                });
+                
+                select.addEventListener('change', updateAct3Dropdowns);
+                
+                pB.appendChild(labelB);
+                pB.appendChild(select);
+                div.appendChild(pA);
+                div.appendChild(pB);
+                container.appendChild(div);
+            });
+        }
+
+        function updateAct3Dropdowns() {
+            const selects = document.querySelectorAll('.act3-dropdown');
+            let selectedValues = [];
+            selects.forEach(s => {
+                if(s.value) selectedValues.push(s.value);
+            });
+            
+            selects.forEach(s => {
+                Array.from(s.options).forEach(opt => {
+                    if(opt.value === "") return;
+                    if(selectedValues.includes(opt.value) && s.value !== opt.value) {
+                        opt.disabled = true;
+                        opt.text = "❌ " + opt.value.substring(0, 30) + "...";
+                    } else {
+                        opt.disabled = false;
+                        opt.text = opt.value;
+                    }
+                });
+            });
+        }
+
+        function renderAct5() {
+            const container = document.getElementById('mcq-container-act5');
+            act5Questions.forEach((qObj, idx) => {
+                let div = document.createElement('div');
+                div.className = "p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm";
+                
+                let qText = document.createElement('p');
+                qText.className = "font-bold mb-3";
+                qText.innerText = `${idx + 1}. ${qObj.q}`;
+                div.appendChild(qText);
+                
+                let optionsDiv = document.createElement('div');
+                optionsDiv.className = "space-y-2";
+                
+                let shuffledOpts = shuffle([...qObj.options]);
+                shuffledOpts.forEach((opt, optIdx) => {
+                    let label = document.createElement('label');
+                    label.className = "flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+                    let radio = document.createElement('input');
+                    radio.type = "radio";
+                    radio.name = `act5-q${idx}`;
+                    radio.value = opt;
+                    radio.className = "w-4 h-4 text-primary focus:ring-primary";
+                    
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(opt));
+                    optionsDiv.appendChild(label);
+                });
+                
+                div.appendChild(optionsDiv);
+                div.dataset.correct = qObj.ans;
+                container.appendChild(div);
+            });
+        }
+
+        function renderAct6() {
+            const container = document.getElementById('sentences-container');
+            act6Sentences.forEach((sentence, idx) => {
+                let div = document.createElement('div');
+                div.className = "p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm";
+                
+                let header = document.createElement('div');
+                header.className = "flex justify-between items-center mb-3";
+                let title = document.createElement('h4');
+                title.className = "font-bold text-primary";
+                title.innerText = `Sentence ${idx + 1}`;
+                
+                let speakBtn = document.createElement('button');
+                speakBtn.innerHTML = '🔊 Hear';
+                speakBtn.className = "text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 py-1 px-3 rounded hover:bg-indigo-200 transition";
+                speakBtn.onclick = () => speakText(sentence);
+                
+                header.appendChild(title);
+                header.appendChild(speakBtn);
+                div.appendChild(header);
+
+                let words = sentence.split(' ');
+                let shuffledWords = shuffle([...words]);
+                
+                let dropZone = document.createElement('div');
+                dropZone.className = "act6-dropzone flex flex-wrap gap-2 min-h-[50px] p-2 rounded border-2 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-darkpanel";
+                dropZone.dataset.correct = sentence;
+                
+                shuffledWords.forEach(word => {
+                    let span = document.createElement('span');
+                    span.className = "word-pill px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded shadow-sm border border-blue-200 dark:border-blue-700 font-medium";
+                    span.innerText = word;
+                    dropZone.appendChild(span);
+                });
+                
+                div.appendChild(dropZone);
+                container.appendChild(div);
+
+                Sortable.create(dropZone, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost'
+                });
+            });
+        }
+
+        function speakText(text) {
+            if('speechSynthesis' in window) {
+                let utterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function renderAct7() {
+            const textContainer = document.getElementById('cloze-text-content');
+            let words = act7TextRaw.split(/(\s+)/); // keep spaces
+            let count = 0;
+            clozeAnswers = [];
+            
+            words.forEach(token => {
+                if(token.trim().length > 0 && token.match(/[a-zA-Z]/)) {
+                    count++;
+                    if(count % 20 === 0) {
+                        // Extract word and punctuation
+                        let match = token.match(/^([a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)(.*?)$/);
+                        if(match) {
+                            let cleanWord = match[1];
+                            let punct = match[2];
+                            clozeAnswers.push(cleanWord);
+                            
+                            let input = document.createElement('input');
+                            input.type = "text";
+                            input.className = "shiny-input act7-cloze w-24 text-center text-sm p-1 mx-1 border-b-2";
+                            input.dataset.answer = cleanWord.toLowerCase();
+                            
+                            textContainer.appendChild(input);
+                            if(punct) textContainer.appendChild(document.createTextNode(punct));
+                        } else {
+                            textContainer.appendChild(document.createTextNode(token));
+                        }
+                    } else {
+                        textContainer.appendChild(document.createTextNode(token));
+                    }
+                } else {
+                    textContainer.appendChild(document.createTextNode(token));
+                }
+            });
+
+            // Render Act 7 MCQs
+            const mcqContainer = document.getElementById('mcq-container-act7');
+            act7Questions.forEach((qObj, idx) => {
+                let div = document.createElement('div');
+                div.className = "p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800";
+                
+                let qText = document.createElement('p');
+                qText.className = "font-bold mb-3";
+                qText.innerText = qObj.q;
+                div.appendChild(qText);
+                
+                let optionsDiv = document.createElement('div');
+                optionsDiv.className = "space-y-2";
+                
+                qObj.options.forEach(opt => {
+                    let label = document.createElement('label');
+                    label.className = "flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition";
+                    let radio = document.createElement('input');
+                    radio.type = "radio";
+                    radio.name = `act7-q${idx}`;
+                    radio.value = opt;
+                    radio.className = "w-4 h-4 text-primary focus:ring-primary";
+                    
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(opt));
+                    optionsDiv.appendChild(label);
+                });
+                
+                div.appendChild(optionsDiv);
+                div.dataset.correct = qObj.ans;
+                mcqContainer.appendChild(div);
+            });
+        }
+
+        function checkAct1() {
+            if(scores.act1.completed) return;
+            let grade = document.getElementById('act1-grade').value;
+            let notes = document.getElementById('act1-notes').value;
+            if(!grade) { alert("Please select a self-grade."); return; }
+            
+            scores.act1.earned = parseInt(grade);
+            scores.act1.completed = true;
+            document.getElementById('act1-grade').disabled = true;
+            document.getElementById('act1-notes').disabled = true;
+            document.getElementById('btn-check-act1').classList.add('hidden');
+            document.getElementById('feedback-act1').innerText = `Activity Checked! Score: ${scores.act1.earned}/${scores.act1.max}`;
+            document.getElementById('feedback-act1').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function checkAct2() {
+            if(scores.act2.completed) return;
+            clearInterval(puzzleTimerInterval);
+            let pieces = document.querySelectorAll('#puzzle-grid .puzzle-piece');
+            let correct = 0;
+            pieces.forEach((p, idx) => {
+                if(parseInt(p.dataset.originalIndex) === idx) correct++;
+            });
+            scores.act2.earned = correct;
+            scores.act2.completed = true;
+            document.getElementById('btn-check-act2').classList.add('hidden');
+            document.getElementById('btn-do-again').classList.add('hidden');
+            document.getElementById('puzzle-grid').classList.add('disabled-element');
+            document.getElementById('feedback-act2').innerText = `Puzzle Checked! Score: ${correct}/20 (Time: ${document.getElementById('puzzle-timer').innerText})`;
+            document.getElementById('feedback-act2').className = "mt-4 text-center font-bold " + (correct===20?"text-green-600":"text-yellow-600");
+        }
+
+        function checkAct3() {
+            if(scores.act3.completed) return;
+            let selects = document.querySelectorAll('.act3-dropdown');
+            let correctCount = 0;
+            selects.forEach(s => {
+                if(s.value === s.dataset.correct) {
+                    correctCount++;
+                    s.classList.add('correct-ans');
+                } else {
+                    s.classList.add('incorrect-ans');
+                }
+                s.disabled = true;
+            });
+            scores.act3.earned = correctCount;
+            scores.act3.completed = true;
+            document.getElementById('btn-check-act3').classList.add('hidden');
+            document.getElementById('feedback-act3').innerText = `Checked! Score: ${correctCount}/9`;
+            document.getElementById('feedback-act3').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function checkAct4() {
+            if(scores.act4.completed) return;
+            let grade = document.getElementById('act4-grade').value;
+            if(!grade) { alert("Please select a self-grade."); return; }
+            scores.act4.earned = parseInt(grade);
+            scores.act4.completed = true;
+            document.getElementById('act4-grade').disabled = true;
+            document.getElementById('act4-notes').disabled = true;
+            document.getElementById('btn-check-act4').classList.add('hidden');
+            document.getElementById('feedback-act4').innerText = `Activity Checked! Score: ${scores.act4.earned}/${scores.act4.max}`;
+            document.getElementById('feedback-act4').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function checkAct5() {
+            if(scores.act5.completed) return;
+            let divs = document.querySelectorAll('#mcq-container-act5 > div');
+            let correctCount = 0;
+            divs.forEach((div, idx) => {
+                let selected = div.querySelector('input[type="radio"]:checked');
+                let correctAns = div.dataset.correct;
+                
+                div.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+                
+                if(selected) {
+                    if(selected.value === correctAns) {
+                        correctCount++;
+                        div.classList.add('correct-ans');
+                    } else {
+                        div.classList.add('incorrect-ans');
+                        let p = document.createElement('p');
+                        p.className = "text-sm text-green-700 font-bold mt-2";
+                        p.innerText = "Correct answer: " + correctAns;
+                        div.appendChild(p);
+                    }
+                } else {
+                    div.classList.add('incorrect-ans');
+                }
+            });
+            scores.act5.earned = correctCount;
+            scores.act5.completed = true;
+            document.getElementById('btn-check-act5').classList.add('hidden');
+            document.getElementById('feedback-act5').innerText = `Checked! Score: ${correctCount}/6`;
+            document.getElementById('feedback-act5').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function checkAct6() {
+            if(scores.act6.completed) return;
+            let dropzones = document.querySelectorAll('.act6-dropzone');
+            let correctCount = 0;
+            dropzones.forEach(zone => {
+                let words = Array.from(zone.children).map(s => s.innerText).join(' ');
+                if(words === zone.dataset.correct) {
+                    correctCount++;
+                    zone.classList.add('correct-ans', 'border-transparent');
+                } else {
+                    zone.classList.add('incorrect-ans', 'border-transparent');
+                    let p = document.createElement('p');
+                    p.className = "text-sm text-green-700 font-bold mt-2 bg-green-100 p-2 rounded";
+                    p.innerText = "Correct: " + zone.dataset.correct;
+                    zone.parentElement.appendChild(p);
+                }
+                zone.classList.add('disabled-element');
+            });
+            scores.act6.earned = correctCount;
+            scores.act6.completed = true;
+            document.getElementById('btn-check-act6').classList.add('hidden');
+            document.getElementById('feedback-act6').innerText = `Checked! Score: ${correctCount}/12`;
+            document.getElementById('feedback-act6').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function checkAct7() {
+            if(scores.act7.completed) return;
+            let correctCount = 0;
+            
+            // Check Cloze
+            let inputs = document.querySelectorAll('.act7-cloze');
+            inputs.forEach(input => {
+                if(input.value.trim().toLowerCase() === input.dataset.answer) {
+                    correctCount++;
+                    input.classList.add('correct-ans', 'text-green-700', 'font-bold');
+                } else {
+                    input.classList.add('incorrect-ans', 'text-red-700', 'line-through');
+                    let span = document.createElement('span');
+                    span.className = "text-green-700 font-bold ml-1 text-sm";
+                    span.innerText = `(${input.dataset.answer})`;
+                    input.parentNode.insertBefore(span, input.nextSibling);
+                }
+                input.disabled = true;
+            });
+
+            // Check MCQs
+            let mcqDivs = document.querySelectorAll('#mcq-container-act7 > div');
+            mcqDivs.forEach((div, idx) => {
+                let selected = div.querySelector('input[type="radio"]:checked');
+                let correctAns = div.dataset.correct;
+                div.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+                
+                if(selected && selected.value === correctAns) {
+                    correctCount++;
+                    div.classList.add('correct-ans');
+                } else {
+                    div.classList.add('incorrect-ans');
+                    let p = document.createElement('p');
+                    p.className = "text-sm text-green-700 font-bold mt-2";
+                    p.innerText = "Correct answer: " + correctAns;
+                    div.appendChild(p);
+                }
+            });
+
+            scores.act7.earned = correctCount; // Total max: cloze_count (18 approx) + 6 mcqs
+            scores.act7.max = inputs.length + 6;
+            scores.act7.completed = true;
+            document.getElementById('btn-check-act7').classList.add('hidden');
+            document.getElementById('feedback-act7').innerText = `Checked! Score: ${correctCount}/${scores.act7.max}`;
+            document.getElementById('feedback-act7').className = "mt-4 text-center font-bold text-green-600";
+        }
+
+        function showResults() {
+            submitAll();
+        }
+
+        let myBarChart, myPieChart;
+
+        function generateResults() {
+            let sName = document.getElementById('studentName').value || "Student";
+            let sDate = document.getElementById('studentDate').value || new Date().toLocaleDateString();
+            document.getElementById('res-name').innerText = sName;
+            document.getElementById('res-date').innerText = sDate;
+
+            let totalEarned = 0;
+            let totalMax = 0;
+            let labels = [];
+            let dataEarned = [];
+            let dataMax = [];
+
+            const listEl = document.getElementById('score-breakdown');
+            listEl.innerHTML = '';
+
+            Object.keys(scores).forEach((key, index) => {
+                let actLabel = `Activity ${index + 1}`;
+                let e = scores[key].earned;
+                let m = scores[key].max;
+                totalEarned += e;
+                totalMax += m;
+                
+                labels.push(actLabel);
+                dataEarned.push(e);
+                dataMax.push(m);
+
+                let li = document.createElement('li');
+                li.innerHTML = `<strong>${actLabel}:</strong> ${e} / ${m} (${Math.round((e/m)*100)}%)`;
+                listEl.appendChild(li);
+            });
+
+            let overallPct = Math.round((totalEarned / totalMax) * 100) || 0;
+            document.getElementById('res-overall').innerText = overallPct + "%";
+            
+            // Recommendations
+            generateRecommendations(overallPct, scores);
+
+            // Chart.js
+            if(myBarChart) myBarChart.destroy();
+            if(myPieChart) myPieChart.destroy();
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            myBarChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Score Earned', data: dataEarned, backgroundColor: '#00bfff' },
+                        { label: 'Max Possible', data: dataMax, backgroundColor: '#cbd5e1' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            myPieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        data: [totalEarned, totalMax - totalEarned],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function generateRecommendations(overall, s) {
+            const list = document.getElementById('recommendations-list');
+            list.innerHTML = '';
+            let recs = [];
+
+            // 1. Overall
+            if(overall >= 90) recs.push("Excellent overall comprehension of imagery; you are ready to tackle complex literary analysis.");
+            else if(overall >= 70) recs.push("Solid foundation in recognizing imagery, but review specific terms like synesthesia and chiaroscuro.");
+            else recs.push("Focus on the basics of the five senses in literature before moving to complex metaphorical combinations.");
+
+            // 2. Act 1 (Video notes)
+            if((s.act1.earned/s.act1.max) < 0.7) recs.push("For video analysis, try to pause and note down specific keywords rather than writing full sentences on the fly.");
+            else recs.push("Your note-taking skills are strong; continue organizing your observations systematically.");
+
+            // 3. Act 2 (Puzzle)
+            if((s.act2.earned/s.act2.max) < 0.8) recs.push("Visual synthesis needs practice: pay closer attention to how disjointed parts form a cohesive image.");
+            
+            // 4. Act 3 (Conversation)
+            if((s.act3.earned/s.act3.max) < 0.7) recs.push("Review conversational flow and contextual clues in dialogue at the C1 level.");
+            else recs.push("Great grasp of advanced literary conversational vocabulary.");
+
+            // 5. Act 5 (Reading MCQ)
+            if((s.act5.earned/s.act5.max) < 0.7) recs.push("Reread complex texts carefully. Look for 'distractor' answers in multiple-choice questions.");
+            
+            // 6. Act 6 (Sentences)
+            if((s.act6.earned/s.act6.max) < 0.7) recs.push("Practice C2 syntax. Pay attention to how complex and compound sentences use subordinating conjunctions.");
+            
+            // 7. Act 7 (Listening/Cloze)
+            if((s.act7.earned/s.act7.max) < 0.7) recs.push("Listening comprehension and contextual guessing (cloze tests) require you to read ahead to predict missing words.");
+            else recs.push("Outstanding listening and analytical skills applied to advanced descriptive texts.");
+
+            // 8. General Writing
+            if((s.act4.earned/s.act4.max) < 0.7) recs.push("When interpreting images, try to go beyond literal description and explore thematic meaning.");
+            else recs.push("Your interpretive writing is creative. Challenge yourself to use more varied adjectives.");
+
+            // Fill to 8 if needed
+            while(recs.length < 8) recs.push("Review Mr. Rocha's notes on how sensory details manipulate pacing.");
+
+            recs.slice(0, 8).forEach(r => {
+                let li = document.createElement('li');
+                li.className = "flex items-start gap-2 bg-blue-50 dark:bg-gray-800 p-3 rounded shadow-sm border-l-4 border-primary";
+                li.innerHTML = `<svg class="w-6 h-6 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>${r}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        // Initialize App on load
+        window.onload = () => {
+            initPuzzle();
+            renderAct3();
+            renderAct5();
+            renderAct6();
+            renderAct7();
+            showSection(0);
+        };
+    </script>
+</body>
+</html>
